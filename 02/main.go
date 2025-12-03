@@ -23,9 +23,16 @@ func main() {
 		fmt.Printf("Part 1: %v\n", partOne.InvalidSum)
 	}
 
+	partTwo := ProductValidation{}
+	err = process_file(filename, partTwo.PartTwo)
+	if err != nil {
+		fmt.Printf("Error with part 2!\n%v\n", err)
+	} else {
+		fmt.Printf("Part 2: %v\n", partTwo.InvalidSum)
+	}
 }
 
-type ProcessSegment func(string) error
+type ProcessSegment func(int, int) error
 
 func process_file(filename string, procs ProcessSegment) error {
 	file, err := os.Open(filename)
@@ -39,7 +46,19 @@ func process_file(filename string, procs ProcessSegment) error {
 
 	for scanner.Scan() {
 		segment := scanner.Text()
-		err = procs(segment)
+		ids := strings.Split(segment, "-")
+		if len(ids) != 2 {
+			return errors.New("There should be exactly 2 ids!")
+		}
+		idStart, err := strconv.Atoi(ids[0])
+		if err != nil {
+			return err
+		}
+		idEnd, err := strconv.Atoi(ids[1])
+		if err != nil {
+			return err
+		}
+		err = procs(idStart, idEnd)
 		if err != nil {
 			return err
 		}
@@ -68,21 +87,18 @@ type ProductValidation struct {
 	InvalidSum int64
 }
 
-func (pv *ProductValidation) PartOne(seg string) error {
-	ids := strings.Split(seg, "-")
-	if len(ids) != 2 {
-		return errors.New("There should be exactly 2 ids!")
-	}
-	idStart, err := strconv.Atoi(ids[0])
-	if err != nil {
-		return err
-	}
-	idEnd, err := strconv.Atoi(ids[1])
-	if err != nil {
-		return err
-	}
+func (pv *ProductValidation) PartOne(idStart int, idEnd int) error {
 	for id := idStart; id <= idEnd; id++ {
 		if isInvalid(id) {
+			pv.InvalidSum += int64(id)
+		}
+	}
+	return nil
+}
+
+func (pv *ProductValidation) PartTwo(idStart int, idEnd int) error {
+	for id := idStart; id <= idEnd; id++ {
+		if isReallyInvalid(id) {
 			pv.InvalidSum += int64(id)
 		}
 	}
@@ -99,6 +115,24 @@ func isInvalid(id int) bool {
 	}
 
 	return firstHalf == (id - (firstHalf * int(math.Pow10(halfLen))))
+}
+
+func isReallyInvalid(id int) bool {
+	idLen := intLen(id)
+	for lenCheck := 2; lenCheck <= idLen; lenCheck++ {
+		if idLen%lenCheck == 0 {
+			segLen := idLen / lenCheck
+			firstSeg := id / int(math.Pow10(idLen-segLen))
+			invalId := firstSeg
+			for i := 1; i < lenCheck; i++ {
+				invalId += firstSeg * int(math.Pow10(i*segLen))
+			}
+			if id == invalId {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func intLen(num int) int {
