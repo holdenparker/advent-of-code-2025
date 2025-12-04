@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 )
@@ -23,6 +24,7 @@ func main() {
 		fmt.Printf("Error processing batteries!\n%v\n", err)
 	} else {
 		fmt.Printf("Largest Joltage Sum: %v\n", batts.LargestJoltageSum)
+		fmt.Printf("Largest 12 Battery Joltage Sum: %v\n", batts.Largest12JoltageSum)
 	}
 }
 
@@ -58,43 +60,42 @@ func (pf *ProcessFile) Run() error {
 }
 
 type Batteries struct {
-	LargestJoltageSum int64
+	LargestJoltageSum   int64
+	Largest12JoltageSum int64
 }
 
 func (b *Batteries) ProcessBank(bank string) error {
-	maxJoltage, err := largest_joltage(bank)
+	maxJoltage, err := joltage_calculator(bank, 2)
 	if err != nil {
 		return err
 	}
-	b.LargestJoltageSum += int64(maxJoltage)
+	b.LargestJoltageSum += maxJoltage
+	maxJoltage, err = joltage_calculator(bank, 12)
+	if err != nil {
+		return err
+	}
+	b.Largest12JoltageSum += maxJoltage
 	return nil
 }
 
-func largest_joltage(bank string) (int, error) {
-	tens := 0
-	tensi := -1
-
-	for i, c := range bank[:len(bank)-1] {
-		n, err := strconv.Atoi(string(c))
-		if err != nil {
-			return 0, err
+func joltage_calculator(bank string, batteries int) (int64, error) {
+	result := int64(0)
+	prevj := -1
+	for i := 0; i < batteries; i++ {
+		prevdig := -1
+		pj := 0
+		for j, c := range bank[prevj+1 : len(bank)-(batteries-i-1)] {
+			n, err := strconv.Atoi(string(c))
+			if err != nil {
+				return 0, err
+			}
+			if n > prevdig {
+				prevdig = n
+				pj = j
+			}
 		}
-		if n > tens {
-			tens = n
-			tensi = i
-		}
+		prevj += pj + 1
+		result += int64(int(math.Pow10(batteries-i-1)) * prevdig)
 	}
-
-	ones := 0
-	for _, c := range bank[tensi+1:] {
-		n, err := strconv.Atoi(string(c))
-		if err != nil {
-			return 0, err
-		}
-		if n > ones {
-			ones = n
-		}
-	}
-
-	return (tens * 10) + ones, nil
+	return result, nil
 }
