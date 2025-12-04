@@ -1,16 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math"
-	"os"
 	"strconv"
+
+	util "github.com/holdenparker/advent-of-code-2025/util"
 )
 
 func main() {
 	batts := Batteries{}
-	pf := ProcessFile{
+	pf := util.ProcessFile{
 		// Filename: "test.txt",
 		Filename: "data.txt",
 		Process:  batts.ProcessBank,
@@ -26,37 +26,6 @@ func main() {
 		fmt.Printf("Largest Joltage Sum: %v\n", batts.LargestJoltageSum)
 		fmt.Printf("Largest 12 Battery Joltage Sum: %v\n", batts.Largest12JoltageSum)
 	}
-}
-
-type ProcessFile struct {
-	Filename string
-	Scanner  *bufio.Scanner
-	Process  func(string) error
-	file     *os.File
-}
-
-func (pf *ProcessFile) Init() error {
-	file, err := os.Open(pf.Filename)
-	if err != nil {
-		return err
-	}
-
-	pf.file = file
-	pf.Scanner = bufio.NewScanner(pf.file)
-	return nil
-}
-
-func (pf *ProcessFile) Run() error {
-	defer pf.file.Close()
-
-	for pf.Scanner.Scan() {
-		segment := pf.Scanner.Text()
-		err := pf.Process(segment)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 type Batteries struct {
