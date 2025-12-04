@@ -1,21 +1,27 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
+
+	util "github.com/holdenparker/advent-of-code-2025/util"
 )
 
 func main() {
-	// filename := "test.txt"
-	filename := "data.txt"
+	pf := util.ProcessFile{
+		// Filename: "test.txt",
+		Filename: "data.txt",
+	}
 
 	part01 := LockDial{
 		Pos:    50,
 		Zeroes: 0,
 	}
-	err := process_file(filename, part01.PartOne)
+	pf.Process = part01.PartOne
+	err := pf.Init()
+	if err == nil {
+		err = pf.Run()
+	}
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
@@ -26,7 +32,11 @@ func main() {
 		Pos:    50,
 		Zeroes: 0,
 	}
-	err = process_file(filename, part02.PartTwo)
+	pf.Process = part02.PartTwo
+	err = pf.Init()
+	if err == nil {
+		err = pf.Run()
+	}
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
@@ -34,43 +44,17 @@ func main() {
 	}
 }
 
-type ProcessLine func(string, int) error
-
-func process_file(filename string, procl ProcessLine) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		dir, mag, err := read_line(line)
-		if err != nil {
-			return err
-		}
-		err = procl(dir, mag)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 type LockDial struct {
 	Pos    int
 	Zeroes int
 }
 
-func (ld *LockDial) PartOne(dir string, mag int) error {
+func (ld *LockDial) PartOne(line string) error {
+	dir, mag, err := read_line(line)
+	if err != nil {
+		return err
+	}
+
 	zeroes := ld.Zeroes
 
 	ld.AdjustPos(dir, mag)
@@ -83,7 +67,11 @@ func (ld *LockDial) PartOne(dir string, mag int) error {
 	return nil
 }
 
-func (ld *LockDial) PartTwo(dir string, mag int) error {
+func (ld *LockDial) PartTwo(line string) error {
+	dir, mag, err := read_line(line)
+	if err != nil {
+		return err
+	}
 	ld.AdjustPos(dir, mag)
 	return nil
 }
