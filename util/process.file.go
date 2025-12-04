@@ -33,5 +33,8 @@ func (pf *ProcessFile) Run() error {
 			return err
 		}
 	}
+	if err := pf.Scanner.Err(); err != nil {
+		return err
+	}
 	return nil
 }

@@ -1,22 +1,29 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"strconv"
 	"strings"
+
+	util "github.com/holdenparker/advent-of-code-2025/util"
 )
 
 func main() {
-	// filename := "test.txt"
-	filename := "data.txt"
+	pf := util.ProcessFile{
+		// Filename: "test.txt",
+		Filename: "data.txt",
+	}
 
 	partOne := ProductValidation{}
-	err := process_file(filename, partOne.PartOne)
+	pf.Process = partOne.PartOne
+	err := pf.Init()
+	if err == nil {
+		pf.Scanner.Split(commaSplit)
+		err = pf.Run()
+	}
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
@@ -24,7 +31,12 @@ func main() {
 	}
 
 	partTwo := ProductValidation{}
-	err = process_file(filename, partTwo.PartTwo)
+	pf.Process = partTwo.PartTwo
+	err = pf.Init()
+	if err == nil {
+		pf.Scanner.Split(commaSplit)
+		err = pf.Run()
+	}
 	if err != nil {
 		fmt.Printf("Error with part 2!\n%v\n", err)
 	} else {
@@ -32,39 +44,20 @@ func main() {
 	}
 }
 
-type ProcessSegment func(int, int) error
-
-func process_file(filename string, procs ProcessSegment) error {
-	file, err := os.Open(filename)
+func process_segment(segment string) (int, int, error) {
+	ids := strings.Split(segment, "-")
+	if len(ids) != 2 {
+		return -1, -1, errors.New("There should be exactly 2 ids!")
+	}
+	idStart, err := strconv.Atoi(ids[0])
 	if err != nil {
-		return err
+		return -1, -1, err
 	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	scanner.Split(commaSplit)
-
-	for scanner.Scan() {
-		segment := scanner.Text()
-		ids := strings.Split(segment, "-")
-		if len(ids) != 2 {
-			return errors.New("There should be exactly 2 ids!")
-		}
-		idStart, err := strconv.Atoi(ids[0])
-		if err != nil {
-			return err
-		}
-		idEnd, err := strconv.Atoi(ids[1])
-		if err != nil {
-			return err
-		}
-		err = procs(idStart, idEnd)
-		if err != nil {
-			return err
-		}
+	idEnd, err := strconv.Atoi(ids[1])
+	if err != nil {
+		return -1, -1, err
 	}
-
-	return nil
+	return idStart, idEnd, nil
 }
 
 func commaSplit(data []byte, atEof bool) (advance int, token []byte, err error) {
@@ -87,7 +80,11 @@ type ProductValidation struct {
 	InvalidSum int64
 }
 
-func (pv *ProductValidation) PartOne(idStart int, idEnd int) error {
+func (pv *ProductValidation) PartOne(segment string) error {
+	idStart, idEnd, err := process_segment(segment)
+	if err != nil {
+		return err
+	}
 	for id := idStart; id <= idEnd; id++ {
 		if isInvalid(id) {
 			pv.InvalidSum += int64(id)
@@ -96,7 +93,11 @@ func (pv *ProductValidation) PartOne(idStart int, idEnd int) error {
 	return nil
 }
 
-func (pv *ProductValidation) PartTwo(idStart int, idEnd int) error {
+func (pv *ProductValidation) PartTwo(segment string) error {
+	idStart, idEnd, err := process_segment(segment)
+	if err != nil {
+		return err
+	}
 	for id := idStart; id <= idEnd; id++ {
 		if isReallyInvalid(id) {
 			pv.InvalidSum += int64(id)
