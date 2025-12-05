@@ -16,10 +16,7 @@ func main() {
 		Process:  batts.ProcessBank,
 	}
 
-	err := pf.Init()
-	if err == nil {
-		err = pf.Run()
-	}
+	err := pf.Go()
 	if err != nil {
 		fmt.Printf("Error processing batteries!\n%v\n", err)
 	} else {
