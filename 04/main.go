@@ -22,6 +22,9 @@ func main() {
 	} else {
 		fmt.Printf("Part 1: %v\n", pr.Accessible)
 	}
+
+	pr.MarkAllAccessibleRolls()
+	fmt.Printf("Part 2: %v\n", pr.Accessible)
 }
 
 const (
@@ -36,6 +39,7 @@ type PaperRolls struct {
 	currline   string
 	nextline   string
 	Accessible int
+	nextpass   []string
 }
 
 func (pr *PaperRolls) NextLine(line string) error {
@@ -46,6 +50,7 @@ func (pr *PaperRolls) NextLine(line string) error {
 	marked := pr.MarkAccessibleRolls()
 	pr.Accessible += strings.Count(marked, ACCESSIBLE)
 
+	pr.nextpass = append(pr.nextpass, strings.ReplaceAll(marked, ACCESSIBLE, "."))
 	// fmt.Println(marked)
 
 	return nil
@@ -61,6 +66,23 @@ func (pr *PaperRolls) MarkAccessibleRolls() string {
 		}
 	}
 	return result
+}
+
+func (pr *PaperRolls) MarkAllAccessibleRolls() {
+	currAccessible := 0
+	for currAccessible != pr.Accessible {
+		currAccessible = pr.Accessible
+		nextpass := pr.nextpass[1:]
+		pr.nextpass = []string{}
+		pr.prevline = ""
+		pr.currline = ""
+		pr.nextline = ""
+		for _, line := range nextpass {
+			pr.NextLine(line)
+		}
+		pr.NextLine("")
+		// fmt.Println(currAccessible, pr.Accessible)
+	}
 }
 
 func (pr *PaperRolls) IsAccessible(col int) bool {
