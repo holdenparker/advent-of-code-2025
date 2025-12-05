@@ -18,10 +18,7 @@ func main() {
 		Zeroes: 0,
 	}
 	pf.Process = part01.PartOne
-	err := pf.Init()
-	if err == nil {
-		err = pf.Run()
-	}
+	err := pf.Go()
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
@@ -33,10 +30,7 @@ func main() {
 		Zeroes: 0,
 	}
 	pf.Process = part02.PartTwo
-	err = pf.Init()
-	if err == nil {
-		err = pf.Run()
-	}
+	err = pf.Go()
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
