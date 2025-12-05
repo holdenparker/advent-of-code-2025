@@ -15,15 +15,12 @@ func main() {
 	pf := util.ProcessFile{
 		// Filename: "test.txt",
 		Filename: "data.txt",
+		Split:    commaSplit,
 	}
 
 	partOne := ProductValidation{}
 	pf.Process = partOne.PartOne
-	err := pf.Init()
-	if err == nil {
-		pf.Scanner.Split(commaSplit)
-		err = pf.Run()
-	}
+	err := pf.Go()
 	if err != nil {
 		fmt.Printf("Error with part 1!\n%v\n", err)
 	} else {
@@ -32,11 +29,7 @@ func main() {
 
 	partTwo := ProductValidation{}
 	pf.Process = partTwo.PartTwo
-	err = pf.Init()
-	if err == nil {
-		pf.Scanner.Split(commaSplit)
-		err = pf.Run()
-	}
+	err = pf.Go()
 	if err != nil {
 		fmt.Printf("Error with part 2!\n%v\n", err)
 	} else {
