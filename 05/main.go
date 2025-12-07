@@ -23,6 +23,7 @@ func main() {
 		fmt.Printf("Error in part 1!\n%v\n", err)
 	} else {
 		fmt.Printf("Number of fresh ingrediants: %v\n", ii.NumberOfFresh)
+		fmt.Printf("Number of possible fresh ingrediants: %v\n", ii.CountPossibleFreshIds())
 	}
 }
 
@@ -125,4 +126,12 @@ func (ii *IngrediantInventory) IdIsFresh(id int) bool {
 		}
 	}
 	return false
+}
+
+func (ii *IngrediantInventory) CountPossibleFreshIds() int {
+	result := 0
+	for _, ir := range ii.freshRanges {
+		result += (ir[1] - ir[0]) + 1
+	}
+	return result
 }
