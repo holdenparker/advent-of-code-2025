@@ -40,8 +40,15 @@ func main() {
 		err = pg.BuildCircuits(maxIter)
 		if err != nil {
 			fmt.Printf("Error in iterating part 1!\n%v\n", err)
+		} else {
+			fmt.Printf("The three largest circuit product is: %v\n", pg.ThreeLargestProduct())
+			err = pg.BuildSingleCircuit()
+			if err != nil {
+				fmt.Printf("Error in iterating part 2!\n%v\n", err)
+			} else {
+				fmt.Printf("The product of the last two X values is: %f\n", pg.LastAddedXProduct())
+			}
 		}
-		fmt.Printf("The three largest circuit product is: %v\n", pg.ThreeLargestProduct())
 	}
 }
 
@@ -49,6 +56,7 @@ type Playground struct {
 	junctionBoxes  []*JunctionBox
 	shortestLights []*LightString
 	circuits       [][]*JunctionBox
+	lastConnected  *LightString
 }
 
 func (pg *Playground) NextLine(line string) error {
@@ -95,12 +103,33 @@ func (pg *Playground) ThreeLargestProduct() int {
 	return int(lens[0]) * int(lens[1]) * int(lens[2])
 }
 
+func (pg *Playground) LastAddedXProduct() float64 {
+	return pg.lastConnected.Junctions[0].X * pg.lastConnected.Junctions[1].X
+}
+
 func (pg *Playground) BuildCircuits(iterations int) error {
 	for i := 0; i < iterations; i++ {
 		err := pg.Iterate()
 		if err != nil && err != CIRCUIT_LOOP_ERR {
 			return err
 		}
+	}
+	return nil
+}
+
+func (pg *Playground) BuildSingleCircuit() error {
+	sort.Slice(pg.circuits, func(i, j int) bool {
+		return len(pg.circuits[i]) > len(pg.circuits[j])
+	})
+	maxLen := len(pg.junctionBoxes)
+	for len(pg.circuits[0]) < maxLen {
+		err := pg.Iterate()
+		if err != nil && err != CIRCUIT_LOOP_ERR {
+			return err
+		}
+		sort.Slice(pg.circuits, func(i, j int) bool {
+			return len(pg.circuits[i]) > len(pg.circuits[j])
+		})
 	}
 	return nil
 }
@@ -121,13 +150,13 @@ func (pg *Playground) Iterate() error {
 	return nil
 }
 
-func (pg *Playground) ConnectJunctionBoxes(jb *LightString) error {
-	jba := jb.Junctions[0]
-	jbb := jb.Junctions[1]
+func (pg *Playground) ConnectJunctionBoxes(ls *LightString) error {
+	jba := ls.Junctions[0]
+	jbb := ls.Junctions[1]
 	if jba.HasConnection(jbb) || jbb.HasConnection(jba) {
 		return ALREADY_CONNECTED_ERR
 	}
-	err := pg.AddToCircuit(jb)
+	err := pg.AddToCircuit(ls)
 	if err != nil {
 		return err
 	}
@@ -136,21 +165,21 @@ func (pg *Playground) ConnectJunctionBoxes(jb *LightString) error {
 	return nil
 }
 
-func (pg *Playground) AddToCircuit(jb *LightString) error {
-	if jb.Junctions[0].Equals(*jb.Junctions[1]) {
+func (pg *Playground) AddToCircuit(ls *LightString) error {
+	if ls.Junctions[0].Equals(*ls.Junctions[1]) {
 		return LINESTRING_LOOP_ERR
 	}
 	aCircuit := -1
 	bCircuit := -1
 	for i := range pg.circuits {
 		for _, box := range pg.circuits[i] {
-			if box.Equals(*jb.Junctions[0]) {
+			if box.Equals(*ls.Junctions[0]) {
 				if aCircuit != -1 {
 					return MULTIPLE_CIRCUITS_ERR
 				}
 				aCircuit = i
 			}
-			if box.Equals(*jb.Junctions[1]) {
+			if box.Equals(*ls.Junctions[1]) {
 				if bCircuit != -1 {
 					return MULTIPLE_CIRCUITS_ERR
 				}
@@ -159,7 +188,7 @@ func (pg *Playground) AddToCircuit(jb *LightString) error {
 		}
 	}
 	if aCircuit == -1 && bCircuit == -1 {
-		pg.circuits = append(pg.circuits, jb.Junctions[:])
+		pg.circuits = append(pg.circuits, ls.Junctions[:])
 	} else if aCircuit == bCircuit {
 		return CIRCUIT_LOOP_ERR
 	} else if aCircuit != -1 && bCircuit != -1 {
@@ -175,10 +204,11 @@ func (pg *Playground) AddToCircuit(jb *LightString) error {
 			pg.circuits = append(pg.circuits[:bCircuit], pg.circuits[bCircuit+1:]...)
 		}
 	} else if aCircuit != -1 {
-		pg.circuits[aCircuit] = append(pg.circuits[aCircuit], jb.Junctions[1])
+		pg.circuits[aCircuit] = append(pg.circuits[aCircuit], ls.Junctions[1])
 	} else if bCircuit != -1 {
-		pg.circuits[bCircuit] = append(pg.circuits[bCircuit], jb.Junctions[0])
+		pg.circuits[bCircuit] = append(pg.circuits[bCircuit], ls.Junctions[0])
 	}
+	pg.lastConnected = ls
 	return nil
 }
 
